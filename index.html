@@ -1,0 +1,174 @@
+<!-- <php
+header("Cache-Control: no-cache, must-revalidate"); // HTTP 1.1
+header("Pragma: no-cache"); // HTTP 1.0
+header("Expires: Wed, 1 Jan 2020 00:00:00 GMT"); // Anytime in the past
+> -->
+
+<!DOCTYPE html>
+<html>
+
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+    <title>PID Control</title>
+
+    <style>
+        html {
+            font-family: Helvetica;
+            display: inline-block;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        body {
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #444444;
+            margin: 50px auto 30px;
+        }
+
+        h3 {
+            color: #444444;
+            margin-bottom: 50px;
+        }
+
+        .button {
+            display: block;
+            width: 80px;
+            background-color: #1abc9c;
+            border: none;
+            color: white;
+            padding: 13px 30px;
+            text-decoration: none;
+            font-size: 25px;
+            margin: 0px auto 35px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .button-on {
+            background-color: #1abc9c;
+        }
+
+        .button-on:active {
+            background-color: #16a085;
+        }
+
+        .button-off {
+            background-color: #34495e;
+        }
+
+        .button-off:active {
+            background-color: #2c3e50;
+        }
+
+        p {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+    </style>
+
+    <script>
+        // GET Request
+        async function fetchAsync(url) {
+            let response = await fetch(url);
+            let data = await response.json();
+            return data;
+        }
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</head>
+<script>
+</script>
+
+<body>
+
+    <!-- submit multiple forms with a single submit button -->
+    <h1>ESP32 with ThingSpeak Server</h1>
+
+    <form>
+        <fieldset>
+            <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
+            <div class="form-control" target="dummyframe">
+                <input type="number" id="input_angle" placeholder="Enter the target angle" required />
+            </div>
+
+            <div class="form-control" target="dummyframe">
+                <input type="number" step="any" min="0" max="100" id="kp" placeholder="Enter K_p" required />
+            </div>
+
+            <div class="form-control" target="dummyframe">
+                <input type="number" step="any" min="0" max="100" id="kd" placeholder="Enter K_d" required />
+            </div>
+
+            <div class="form-control" target="dummyframe">
+                <input type="number" step="any" min="0" max="100" id="ki" placeholder="Enter K_i" required />
+            </div>
+
+            <!-- <input type="submit" value="Send" class="submit-btn" onclick="bulkPush()" /> -->
+            <button onclick="bulkPush()"  value="Submit">Send</button>
+        </fieldset>
+        <!-- button onclick bulkpush -->
+    </form>
+
+
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;"
+        src="https://thingspeak.com/channels/1825221/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=75&title=Input+Angle&type=line&xaxis=Time%28+Difference+in+Time+scaled+10x%29&yaxis=Angle+%28in+degrees%29&yaxismax=360&yaxismin=0"></iframe>
+
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;"
+        src="https://thingspeak.com/channels/1825221/charts/2?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=75&title=Angle+traversed&type=line&xaxis=Time%28+Difference+in+Time+scaled+10x+%29&yaxis=Angle+%28in+degrees%29&yaxismin=0"></iframe>
+
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;"
+        src="https://thingspeak.com/channels/1825221/charts/3?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=75&title=Error%28u%29&type=line&xaxis=Time%28+Difference+in+Time+scaled+10x%29&yaxis=PID+Error"></iframe>
+    <br>
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;" src="https://thingspeak.com/channels/1856865/charts/6?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=75&title=Current+Angle&type=line&xaxis=Time%28+Difference+in+Time+scaled+10x+%29&yaxis=Angle+%28Degrees%29&yaxismin=0"></iframe>
+
+
+
+<iframe width="450" height="260" style="border: 1px solid #cccccc;" src="https://thingspeak.com/channels/1856865/charts/5?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=75&title=Error&type=line&xaxis=Time%28+Difference+in+Time+scaled+10x+%29&yaxis=U"></iframe>
+
+
+
+<iframe width="450" height="260" style="border: 1px solid #cccccc;" src="https://thingspeak.com/channels/1856865/charts/7?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=75&title=Power+Given&type=line&xaxis=Time%28+Difference+in+Time+scaled+10x+%29&yaxis=PWR"></iframe>
+    <br>
+
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;"
+        src="https://thingspeak.com/channels/1825221/charts/5?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&title=Proportionality+constant&type=line"></iframe>
+
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;"
+        src="https://thingspeak.com/channels/1825221/charts/6?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&title=Differentiation+Constant&type=line"></iframe>
+
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;"
+        src="https://thingspeak.com/channels/1825221/charts/7?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&update=15"></iframe>
+
+
+    <script>
+        function bulkPush() {
+//             console.log('Hi')
+
+//             let angle = document.getElementById("input_angle").value;
+//             let kp = document.getElementById("kp").value;
+//             let ki = document.getElementById("ki").value;
+//             let kd = document.getElementById("kd").value;
+//             console.log(angle);
+//             console.log(kp);
+//             console.log(ki);
+//             console.log(kd);
+
+//             const url = 'https://api.thingspeak.com/update?api_key=S6W8OO70L5TBDX50&field1=' + angle + '&field2=' + kp + '&field3=' + kd + '&field4=' + ki;
+//             console.log(url);
+
+//             fetchAsync(url)
+//                 .then(data => console.log(data))
+//                 .catch(reason => console.log(reason.message));
+        }
+    </script>
+</body>
+
+</html>
